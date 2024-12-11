@@ -6,20 +6,24 @@ import {
   isValidElement,
   ReactElement,
 } from "react";
-import { useForm } from "react-hook-form";
+import { DefaultValues, FieldValues, useForm } from "react-hook-form";
 import { InputProps } from "./input";
 
-interface FormProps {
+interface FormProps<T extends FieldValues> {
   children: ReactElement;
+  onSubmit: (data: T) => void;
+  defaultValues: DefaultValues<T>
 }
 
-export const Form = ({ children }: FormProps) => {
-  const { control } = useForm({});
+export const Form = <T extends FieldValues>({ children, onSubmit, defaultValues }: FormProps<T>) => {
+  const { control, handleSubmit } = useForm<T>({
+    defaultValues
+  });
   return (
-    <form>
+    <form onSubmit={handleSubmit(onSubmit)}>
       {Children.map(children, (child) => {
-        if (isValidElement<InputProps>(child)) {
-          return cloneElement(child, { formController: control });
+        if (isValidElement<InputProps<T>>(child)) {
+          return cloneElement(child, { control });
         }
 
         return child;
