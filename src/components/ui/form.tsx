@@ -1,34 +1,44 @@
 "use client";
 
+import {  ReactElement } from "react";
 import {
-  Children,
-  cloneElement,
-  isValidElement,
-  ReactElement,
-} from "react";
-import { DefaultValues, FieldValues, useForm } from "react-hook-form";
-import { InputProps } from "./input";
+  DefaultValues,
+  FormProvider,
+  useForm,
+} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-interface FormProps<T extends FieldValues> {
-  children: ReactElement;
-  onSubmit: (data: T) => void;
-  defaultValues: DefaultValues<T>
+type ValidSchema = z.ZodObject<{
+  [K: string]: z.ZodTypeAny;
+}>;
+
+type InferredFormData<TSchema extends ValidSchema> = z.infer<TSchema>;
+
+interface FormProps<TSchema extends ValidSchema> {
+  children: ReactElement[] | ReactElement;
+  onSubmit: (data: InferredFormData<TSchema>) => void;
+  defaultValues: DefaultValues<InferredFormData<TSchema>>;
+  schema: TSchema;
+  className?: string
 }
 
-export const Form = <T extends FieldValues>({ children, onSubmit, defaultValues }: FormProps<T>) => {
-  const { control, handleSubmit } = useForm<T>({
-    defaultValues
+export const Form = <TSchema extends ValidSchema>({
+  children,
+  onSubmit,
+  defaultValues,
+  schema,
+  className
+}: FormProps<TSchema>) => {
+  const methods = useForm<InferredFormData<TSchema>>({
+    defaultValues,
+    resolver: zodResolver(schema),
   });
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      {Children.map(children, (child) => {
-        if (isValidElement<InputProps<T>>(child)) {
-          return cloneElement(child, { control });
-        }
-
-        return child;
-      })}
-    </form>
-
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)} className={className}>
+      {children}
+      </form>
+    </FormProvider>
   );
 };
