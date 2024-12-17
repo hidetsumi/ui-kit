@@ -8,14 +8,14 @@ import { z } from "zod";
 
 const signupSchema = z
   .object({
-    nombre: z.string().max(15),
+    nombre: z.string().max(15, {message: "Tiene que tener maximo 15 caracteres"}),
     apellido: z.string().max(15),
   })
   .required();
 
 export default function Home() {
-  const submit = () => {
-    console.log("Hola :)");
+  const submit = (data: z.infer<typeof signupSchema>) => {
+    console.log(data.apellido, data.nombre);
   };
 
   return (
@@ -30,7 +30,7 @@ export default function Home() {
       >
         <Input name="nombre" label="Username"/>
         <Input name='apellido' />
-        <Button ></Button>
+        <Button type="submit"> Crear cuenta</Button>
       </Form>
 
 
